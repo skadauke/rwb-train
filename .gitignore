@@ -1,6 +1,6 @@
-license.lic
 users.txt
 .Rproj.user
 *.Rproj
-test.Rmd
+*.Rmd
 README.html
+.vscode/

@@ -8,6 +8,49 @@ if $DEBUG; then
     set -x
 fi
 
+# Parse options
+
+#CMD ["start_rsp_train.sh", "--n-users $N_USERS", "--pw-seed $PW_SEED", "--user-prefix $USER_PREFIX", "--gh-repo $GH_REPO"]
+
+PW_SEED=
+GH_REPO=
+N_USERS=100
+USER_PREFIX=train
+
+usage () { 
+  echo
+  echo "Usage: ./start_rsp_train.sh --pw-seed <value> --gh-repo <value> [--n-users <value>] [--user-prefix <value>]"
+  echo
+  echo "Options:"
+  echo "--pw-seed       Seed for randomly generated user passwords. Required."
+  echo "--gh-repo       GitHub repository with training materials. Must contain exercises/ and solutions/ folders. Required"
+  echo "--n-users       Number of users to generate. Default = 100."
+  echo "--user-prefix   Prefix for user account. Default = \"train\"."
+}
+
+while :; do
+  case "$1" in
+    --pw-seed )       PW_SEED="$2"; shift 2;;
+    --gh-repo )       GH_REPO="$2"; shift 2;;
+    --n-users )       N_USERS="$2"; shift 2;;
+    --user-prefix )   USER_PREFIX="$2"; shift 2;;
+    -- ) shift; break;;
+    * ) break ;;
+  esac
+done
+
+if [[ -z $PW_SEED ]]; then
+  echo "Error: Password seed must be supplied to --pw-seed."
+  usage
+  exit 1
+fi
+
+if [[ -z $GH_REPO ]]; then
+  echo "Error: GitHub repo must be supplied to --gh-repo."
+  usage
+  exit 1
+fi
+
 # Deactivate license with docker stop
 
 deactivate() {
@@ -28,14 +71,24 @@ trap deactivate EXIT
 
 # Copy course materials into /etc/skel
 
-git clone https://github.com/skadauke/intro-to-r-for-clinicians-rmed2020 /tmp/materials &&
-  cp -a /tmp/materials/exercises/ /etc/skel/ &&
-  cp -a /tmp/materials/solutions/ /etc/skel/ &&
+git clone "$GH_REPO" /tmp/materials
+
+if [[ -d "/tmp/materials/exercises" && -d "/tmp/materials/solutions" ]]; then
+  cp -a /tmp/materials/exercises/ /etc/skel/
+  cp -a /etc/skel/exercises /etc/skel/backup
+  cp -a /tmp/materials/solutions/ /etc/skel/
   rm -rf /tmp/materials
+else
+  echo
+  echo "Error: GitHub repo must contain exercises/ and solutions/ directories."
+  echo
+  rm -rf /tmp/materials
+  exit 1
+fi
 
 # Create users file
 
-/usr/local/bin/create_users_table.R $USER_PREFIX $N_USERS $PW_SEED $USER_FILE
+/usr/local/bin/create_users_table.R "$USER_PREFIX" "$N_USERS" "$PW_SEED" "$USER_FILE"
 
 # Create users
 
@@ -52,13 +105,13 @@ do
     fi
 
     # Skip existing users
-    USER_EXISTS=$(id -u $USERNAME > /dev/null 2>&1; echo $?)
+    USER_EXISTS=$(id -u "$USERNAME" > /dev/null 2>&1; echo $?)
     if [[ "$USER_EXISTS" -eq "0" ]]; then
-        printf '# User %s exists, skipping\n' $USERNAME
+        printf '# User %s exists, skipping\n' "$USERNAME"
         continue
     fi
 
-    printf '# Create user %s with password %s\n' $USERNAME $PASSWORD
+    printf '# Create user %s with password %s\n' "$USERNAME" "$PASSWORD"
 
     # Start useradd command
     CMD="useradd --shell /bin/bash -g users -p \$(openssl passwd -1 $PASSWORD)"
@@ -66,27 +119,26 @@ do
     # Add home dir, unless existing
     HOME_DIR="/home/$USERNAME"
     if [ ! -d "$HOME_DIR" ]; then
-        CMD=`printf '%s --create-home' "$CMD"`
+        CMD=$(printf '%s --create-home' "$CMD")
     fi
 
     # Sudo users 001 through 009 (to be used by instructors)
     if [[ $USERNAME =~ 00[1-9] ]]; then
-        CMD=`printf '%s %s' "$CMD" "-G sudo"`
+        CMD=$(printf '%s %s' "$CMD" "-G sudo")
     fi
 
-    CMD=`printf '%s %s' "$CMD" "$USERNAME"`
+    CMD=$(printf '%s %s' "$CMD" "$USERNAME")
 
     if $DEBUG; then
         printf 'RUN: %s\n' "$CMD"
     fi
 
-    eval $CMD
+    eval "$CMD"
 
 done < $USER_FILE
 
 rm -rf $USER_FILE
 
 # Run RSP startup script
-# TODO: remove temp user with standard password
 
 /usr/local/bin/startup.sh

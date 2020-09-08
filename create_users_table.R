@@ -29,7 +29,7 @@ if (is.na(pw_seed)) {
 set.seed(pw_seed)
 users <- tibble::tibble(
   username = glue::glue("{prefix}{1:n_users %>% str_pad(3, '0', side = 'left')}"),
-  password = runif(n_users, min = 0, max = 999999) %>% as.integer %>% str_pad(6, '0', side = "left")
+  password = runif(n_users, min = 100000, max = 999999) %>% as.integer %>% str_pad(6, '0', side = "left")
 )
 
 users %>%
