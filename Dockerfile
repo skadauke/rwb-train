@@ -23,10 +23,6 @@ RUN apt-get update --fix-missing && apt-get install -y --no-install-recommends \
 
 RUN R -e 'install.packages("devtools", repos="https://packagemanager.rstudio.com/cran/__linux__/bionic/latest")' && \
     R -e 'install.packages("tidyverse", repos="https://packagemanager.rstudio.com/cran/__linux__/bionic/latest")' && \
-    R -e 'install.packages("shiny", repos="https://packagemanager.rstudio.com/cran/__linux__/bionic/latest")' && \
-    R -e 'install.packages("flexdashboard", repos="https://packagemanager.rstudio.com/cran/__linux__/bionic/latest")' && \
-    R -e 'install.packages("plotly", repos="https://packagemanager.rstudio.com/cran/__linux__/bionic/latest")' && \
-    R -e 'install.packages("DT", repos="https://packagemanager.rstudio.com/cran/__linux__/bionic/latest")' && \
     R -e 'install.packages("rmarkdown", repos="https://packagemanager.rstudio.com/cran/__linux__/bionic/latest")'
 
 COPY start_rsp_train.sh /usr/local/bin/start_rsp_train.sh
@@ -34,4 +30,4 @@ RUN chmod +x /usr/local/bin/start_rsp_train.sh
 COPY create_users_table.R /usr/local/bin/create_users_table.R
 RUN chmod +x /usr/local/bin/create_users_table.R
 
-CMD start_rsp_train.sh --n-users $N_USERS --pw-seed $PW_SEED --user-prefix $USER_PREFIX --gh-repo $GH_REPO
+CMD start_rsp_train.sh --n-users $N_USERS --pw-seed $PW_SEED --user-prefix $USER_PREFIX --gh-repo $GH_REPO --r-packages $R_PACKAGES --r-packages-gh $R_PACKAGES_GH

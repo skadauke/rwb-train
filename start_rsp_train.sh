@@ -10,22 +10,25 @@ fi
 
 # Parse options
 
-#CMD ["start_rsp_train.sh", "--n-users $N_USERS", "--pw-seed $PW_SEED", "--user-prefix $USER_PREFIX", "--gh-repo $GH_REPO"]
-
 PW_SEED=
 GH_REPO=
 N_USERS=100
 USER_PREFIX=train
+R_PACKAGES=
 
 usage () { 
   echo
-  echo "Usage: ./start_rsp_train.sh --pw-seed <value> --gh-repo <value> [--n-users <value>] [--user-prefix <value>]"
+  echo "Usage: ./start_rsp_train.sh --pw-seed <value> --gh-repo <value> [--n-users <value>]"
+  echo "                            [--user-prefix <value>] [--r-packages <pkg1,pkg2,pkg3,...>]"
+  echo "                            [--r-packages-gh <repo1/pkg1,repo2/pkg2,...>"
   echo
   echo "Options:"
   echo "--pw-seed       Seed for randomly generated user passwords. Required."
   echo "--gh-repo       GitHub repository with training materials. Must contain exercises/ and solutions/ folders. Required"
   echo "--n-users       Number of users to generate. Default = 100."
   echo "--user-prefix   Prefix for user account. Default = \"train\"."
+  echo "--r-packages    Comma-separated list of R packages to install from CRAN. Optional."
+  echo "--r-packages-gh Comma-separates list of R packages to install from GitHub. Optional."
 }
 
 while :; do
@@ -34,6 +37,8 @@ while :; do
     --gh-repo )       GH_REPO="$2"; shift 2;;
     --n-users )       N_USERS="$2"; shift 2;;
     --user-prefix )   USER_PREFIX="$2"; shift 2;;
+    --r-packages )    R_PACKAGES="$2"; shift 2;;
+    --r-packages-gh ) R_PACKAGES_GH="$2"; shift 2;;
     -- ) shift; break;;
     * ) break ;;
   esac
@@ -50,6 +55,35 @@ if [[ -z $GH_REPO ]]; then
   usage
   exit 1
 fi
+
+# Install R packages
+
+if [[ -n $R_PACKAGES ]]; then
+  IFS=","
+  PKGS=( )
+  read -ra PKGS <<< "$R_PACKAGES"
+
+  for PKG in "${PKGS[@]}"; do
+    echo
+    echo "# Install CRAN R package $PKG..."
+    echo
+    R -e "install.packages(\"$PKG\", repos=\"https://packagemanager.rstudio.com/cran/__linux__/bionic/latest\")"
+  done
+fi
+
+if [[ -n $R_PACKAGES_GH ]]; then
+  IFS=","
+  PKGS=( )
+  read -ra PKGS <<< "$R_PACKAGES_GH"
+
+  for PKG in "${PKGS[@]}"; do
+    echo
+    echo "# Install GitHub R package $PKG..."
+    echo
+    R -e "remotes::install_github(\"$PKG\")"
+  done
+fi
+
 
 # Deactivate license with docker stop
 
