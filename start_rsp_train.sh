@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USER_FILE=/root/users.txt
+USER_FILE=/root/users/users.txt
 TEMPLATE_USER_DIR=/etc/skel
 DEBUG=false
 
