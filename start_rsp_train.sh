@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USER_FILE=/tmp/users.txt
+USER_FILE=/root/users.txt
 TEMPLATE_USER_DIR=/etc/skel
 DEBUG=false
 
@@ -219,8 +219,6 @@ do
     eval "$CMD"
 
 done < $USER_FILE
-
-rm -rf $USER_FILE
 
 # Run RSP startup script
 
