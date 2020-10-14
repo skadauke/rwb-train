@@ -15,12 +15,13 @@ GH_REPO=
 N_USERS=100
 USER_PREFIX=train
 R_PACKAGES=
+R_PACKAGES_GH=
 
 usage () { 
   echo
   echo "Usage: ./start_rsp_train.sh --pw-seed <value> --gh-repo <value> [--n-users <value>]"
   echo "                            [--user-prefix <value>] [--r-packages <pkg1,pkg2,pkg3,...>]"
-  echo "                            [--r-packages-gh <repo1/pkg1,repo2/pkg2,...>"
+  echo "                            [--r-packages-gh <repo1/pkg1,repo2/pkg2,...>]"
   echo
   echo "Options:"
   echo "--pw-seed       Seed for randomly generated user passwords. Required."
@@ -33,12 +34,60 @@ usage () {
 
 while :; do
   case "$1" in
-    --pw-seed )       PW_SEED="$2"; shift 2;;
-    --gh-repo )       GH_REPO="$2"; shift 2;;
-    --n-users )       N_USERS="$2"; shift 2;;
-    --user-prefix )   USER_PREFIX="$2"; shift 2;;
-    --r-packages )    R_PACKAGES="$2"; shift 2;;
-    --r-packages-gh ) R_PACKAGES_GH="$2"; shift 2;;
+    --pw-seed )
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        PW_SEED="$2"
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    --gh-repo )
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        GH_REPO="$2"
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    --n-users ) 
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        N_USERS="$2"
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    --user-prefix )
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        USER_PREFIX="$2"
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    --r-packages )
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        R_PACKAGES="$2"
+        shift 2
+      else
+        # Silently accept missing argument
+        shift 1
+      fi
+      ;;
+    --r-packages-gh )
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        R_PACKAGES_GH="$2"
+        shift 2 
+      else
+        # Silently accept missing argument
+        shift 1
+      fi
+      ;;
     -- ) shift; break;;
     * ) break ;;
   esac
