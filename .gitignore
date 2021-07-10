@@ -1,6 +1,12 @@
 users.txt
+.Rhistory
 .Rproj.user
 *.Rproj
 *.Rmd
 README.html
 .vscode/
+.DS_Store
+
+# Don't commit passwords or API keys
+*.pem
+*users.txt
