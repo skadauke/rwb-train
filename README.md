@@ -101,7 +101,7 @@ docker push <your_username>/rsp-train
 6. Log into the machine, substituting <your_server> for either the public IPv4 address or the domain name of the server.
 
 ```bash
-ssh -i ubuntu@rsp-train.pem ubuntu@<your_server>
+ssh -i rsp-train.pem ubuntu@<your_server>
 ```
 
 Enter "yes" if asked if you want to connect. If you get a warning about an unprotected privae key file, change permissions to user read-only by running `chmod 0400 rsp-train.pem`.
