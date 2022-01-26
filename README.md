@@ -98,10 +98,12 @@ docker push <your_username>/rsp-train
 
 5. Create a hosted zone in Route 53 for your domain name. (If you just registered the domain name, Route 53 will have created a hosted zone for you). Within the hosted zone, create a new DNS record (record type **A**) that points the host name to the IP of your server. For more information, see [here](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-ec2-instance.html)
 
+If you want to avoid the hassle of changing your IP address in DNS records every time you shut down and restart your server, you can choose to allocate an "Elastic IP" address (a small number come free with every AWS account).  Read [the AWS documentation](https://aws.amazon.com/premiumsupport/knowledge-center/ec2-associate-static-public-ip/) about Elastic IP and consider allocating one for your EC2 instance.
+
 6. Log into the machine, substituting <your_server> for either the public IPv4 address or the domain name of the server.
 
 ```bash
-ssh -i ubuntu@rsp-train.pem ubuntu@<your_server>
+ssh -i rsp-train.pem ubuntu@<your_server>
 ```
 
 Enter "yes" if asked if you want to connect. If you get a warning about an unprotected privae key file, change permissions to user read-only by running `chmod 0400 rsp-train.pem`.
