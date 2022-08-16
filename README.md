@@ -85,14 +85,15 @@ docker push <your_username>/rsp-train
 
 2. Create an EC2 instance with the following properties:
 
-   - Ubuntu 20.04 LTS AMI
+   - Ubuntu 20.04 (or later) LTS AMI
    - Select a machine size large enough for the expected load. Individual RStudio.cloud instances are 1 GB and 1 core. So for a workshop with 30 participants, I would suggest a machine with 32-64GB and 16-32 cores. For testing, the "free tier eligible" `t2.micro` machine (1 GB, 1 core) works well.
+   - Create a key pair if you don't already have one. Move the `.pem` file to `~/.ssh/` of your local machine. Change the permissions to be readable only by root `chmod 400 my-key-file.pem`.
    - Configure the security group to allow inbound HTTP and HTTPS traffic (ports 80 and 443)
-   - Create a key pair named `rsp-train`
+   - Ensure there is enough storage. I would suggest 1 GB per participant.
 
 3. Note the **Public IPv4 address** of the machine.
 
-4. Create a domain name for your server. One way to do this is using AWS' Route 53 service.
+4. Optional: create a domain name for your server. One way to do this is using AWS' Route 53 service.
 
     Note: register your domain early. It may take up to 3 days for the domain registration to be processed (although in my case it took about half an hour).
 
@@ -100,29 +101,30 @@ docker push <your_username>/rsp-train
 
 If you want to avoid the hassle of changing your IP address in DNS records every time you shut down and restart your server, you can choose to allocate an "Elastic IP" address (a small number come free with every AWS account).  Read [the AWS documentation](https://aws.amazon.com/premiumsupport/knowledge-center/ec2-associate-static-public-ip/) about Elastic IP and consider allocating one for your EC2 instance.
 
-6. Log into the machine, substituting <your_server> for either the public IPv4 address or the domain name of the server.
+6. Log into the machine, substituting `<path-to-your-pem-file>` for the path to the `.pem` key file, and `<your_server>` for either the public IPv4 address or the domain name of the server.
 
 ```bash
-ssh -i rsp-train.pem ubuntu@<your_server>
+ssh -i <path-to-your-pem-file> ubuntu@<your_server>
 ```
 
-Enter "yes" if asked if you want to connect. If you get a warning about an unprotected privae key file, change permissions to user read-only by running `chmod 0400 rsp-train.pem`.
+Enter "yes" if asked if you want to connect. If you get a warning about an unprotected private key file, change permissions to user read-only by running `chmod 0400 <path-to-your-pem-file>`.
 
 7. Update packages and set up a firewall
 
 ```bash
-sudo apt update
+sudo apt update &&
+sudo apt upgrade &&
 
-sudo ufw allow OpenSSH
+sudo ufw allow OpenSSH &&
 sudo ufw enable
 ```
 
 8. Install Nginx and configure reverse proxy with HTTPS redirect with a TLS/SSL certificate from Letsencrypt.
 
 ```bash
-sudo apt install nginx
-sudo ufw allow 'Nginx Full'
-sudo systemctl start nginx
+sudo apt install nginx &&
+sudo ufw allow 'Nginx Full' &&
+sudo systemctl start nginx &&
 sudo systemctl enable nginx
 ```
 
@@ -131,7 +133,7 @@ Check that your server is accessible from http://<your_server>.
 Substitute `<your_domain>` with the domain name you registered:
 
 ```bash
-sudo snap install --classic certbot
+sudo snap install --classic certbot &&
 sudo ln -s /snap/bin/certbot /usr/bin/certbot
 
 sudo certbot --nginx -d <your_domain>
@@ -144,16 +146,16 @@ If this worked successfully, then anyone who connects to http://<your_server> wi
 9. Set up Docker
 
 ```bash
-sudo apt update
-sudo apt install apt-transport-https ca-certificates curl gnupg lsb-release
+sudo apt update &&
+sudo apt install apt-transport-https ca-certificates curl gnupg lsb-release &&
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg &&
 
 echo \
   "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-sudo apt update
+sudo apt update &&
 sudo apt install docker-ce docker-ce-cli containerd.io
 ```
 
@@ -221,7 +223,7 @@ Add the following lines right after `http {` in `/etc/nginx/nginx.conf`:
 Test the configuration and restart Nginx:
 
 ```bash
-sudo nginx -t
+sudo nginx -t &&
 sudo systemctl restart nginx
 ```
 
