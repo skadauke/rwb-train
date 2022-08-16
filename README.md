@@ -1,6 +1,6 @@
 # RStudio Server Pro Training Environment
 
-Docker image for an Intro to R training environment using RStudio Server Pro. This image is based on [rstudio/rstudio-server-pro](https://hub.docker.com/r/rstudio/rstudio-server-pro). It automatically generates a configurable number (up to 999) of training accounts, which can be useful for Intro to R courses such as [Intro to R for Clinicians](https://github.com/skadauke/intro-to-r-for-clinicians-rmed2020) at the [R/Medicine 2020 Virtual Conference](https://www.r-medicine.com).
+Docker image for an Intro to R training environment using RStudio Workbench (formerly called RStudio Server Pro). This image is based on [rstudio/rstudio-workbench](https://hub.docker.com/r/rstudio/rstudio-workbench). It automatically generates a configurable number (up to 999) of training accounts, which can be useful for Intro to R courses such as [Intro to R for Clinicians](https://github.com/skadauke/intro-to-r-for-clinicians-rmed2020) at the [R/Medicine 2020 Virtual Conference](https://www.r-medicine.com).
 
 ## Features
 
