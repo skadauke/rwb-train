@@ -1,6 +1,8 @@
-# RStudio Server Pro Training Environment
+# RStudio Workbench Training Environment
 
 Docker image for an Intro to R training environment using RStudio Workbench (formerly called RStudio Server Pro). This image is based on [rstudio/rstudio-workbench](https://hub.docker.com/r/rstudio/rstudio-workbench). It automatically generates a configurable number (up to 999) of training accounts, which can be useful for Intro to R courses such as [Intro to R for Clinical Data](https://github.com/skadauke/intro-to-r-for-clinical-data-rmed2022) at the [R/Medicine 2022 Virtual Conference](https://r-medicine.org).
+
+**Note**: To use this Docker image, you need an active RStudio Workbench license.
 
 ## Features
 
@@ -21,10 +23,6 @@ In addition, the startup script accomplishes the following:
   - GitHub R packages are supported.
 - Automatically activates and deactivates the supplied RStudio Server Pro license when the docker container is started or stopped.
 
-## Configuration
-
-Note that running the RStudio Workbench Docker image requires the container to run using the `--privileged` flag and a valid RStudio Workbench license. The image also expects an `/etc/rstudio` folder which customarily is mounted from a local directory named `server-pro/conf`.
-
 ## Example use
 
 ### Build the docker image locally
@@ -36,6 +34,8 @@ docker build -t rwb-train .
 ### Start the RStudio Server
 
 The following example will start an RStudio Workbench instance with `shiny`, `flexdashboard`, and `plotly` packages from CRAN, as well as the `rstudio/DT` package from GitHub, installed globally. One hundred users will be created, named `rmed001`, `rmed002`, ... `rmed100`. Each user's home directory will have a copy of the `exercises` and `solutions` folders from the `skadauke/intro-to-r-for-clinical-data-rmed2022` GitHub repository, as well as a folder titled `backup` which contains another copy of the `exercises` folder (This comes in handy if the learner accidentally deletes or otherwise changes an exercise file).
+
+Note: RStudio Workbench does not currently work on Apple Silicon.
 
 ```bash
 # Replace with valid license
@@ -89,19 +89,19 @@ docker push <your_username>/rwb-train
    - Select a machine size large enough for the expected load. Individual RStudio.cloud instances are 1 GB and 1 core. So for a workshop with 30 participants, I would suggest a machine with 32-64GB and 16-32 cores. For testing, the "free tier eligible" `t2.micro` machine (1 GB, 1 core) works well.
    - Create a key pair if you don't already have one. Move the `.pem` file to `~/.ssh/` of your local machine. Change the permissions to be readable only by root `chmod 400 my-key-file.pem`.
    - Configure the security group to allow inbound HTTP and HTTPS traffic (ports 80 and 443)
-   - Ensure there is enough storage. I would suggest 1 GB per participant.
+   - Ensure there is enough storage. I would suggest a minimum of 16 GB plus 1 GB per participant.
 
 3. Note the **Public IPv4 address** of the machine.
 
-4. Optional but highly recommended: Create an Elastic IP for your machine. This will allow you to avoid the hassle of changing your IP address in DNS records every time you shut down and restart your server. From within EC2, allocate an "Elastic IP" address and associate it with your instance.
+4. Create an Elastic IP for your machine. This will allow you to avoid the hassle of changing your IP address in DNS records every time you shut down and restart your server. From within EC2, allocate an "Elastic IP" address and associate it with your instance.
 
 5. Optional: create a domain name for your server. One way to do this is using AWS' Route 53 service.
 
-    Note: register your domain early. It may take up to 3 days for the domain registration to be processed (although in my case it took about half an hour), and it may take up to 72 hours for the DNS record to propagate through the internet.
+    Note: register your domain early. It may take up to 3 days for the domain registration to be processed and for the DNS record to propagate through the internet.
 
-6. Create a hosted zone in Route 53 for your domain name. (If you just registered the domain name, Route 53 will have created a hosted zone for you). Within the hosted zone, create a new DNS record (record type **A**) that points the host name to the IP of your server. For more information, see [here](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-ec2-instance.html).
+6. Create a hosted zone in Route 53 for your domain name. (If you just registered the domain name, Route 53 will have created a hosted zone for you). Within the hosted zone, create a new DNS record (record type **A**) that points the host name to the IP of your server. Use the **Elastic IP** for the IP. For more information, see [here](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-ec2-instance.html).
 
-7. Log into the machine, substituting `<path-to-your-pem-file>` for the path to the `.pem` key file, and `<your_server>` for either the public IPv4 address or the domain name of the server.
+7. Log into the machine, substituting `<path-to-your-pem-file>` for the path to the `.pem` key file, and `<your_server>` for either the elastic IP address or the domain name of the server.
 
 ```bash
 ssh -i <path-to-your-pem-file> ubuntu@<your_server>
@@ -141,7 +141,7 @@ sudo certbot --nginx -d <your_domain>
 
 Enter your email when prompted.
 
-If this worked successfully, then anyone who connects to http://<your_server> will be automatically redirected to a secure HTTPS connection (https://<your_server>), and the TLS certificate should be valid.
+If this worked successfully, then anyone who connects to http://<your_server> will be automatically redirected to a secure HTTPS connection (https://<your_server>), and the TLS certificate should be valid. Try this out by navigating to http://<your_server> and noting that you got redirected to a secure HTTPS location. A lock should appear in your browser to the right of the URL.
 
 9. Set up Docker
 
@@ -159,7 +159,13 @@ sudo apt update &&
 sudo apt install docker-ce docker-ce-cli containerd.io
 ```
 
-10. Set up the RSP-train application. Substitute <license> with your RSP license. Also, for security reasons, it's highly recommended that you change the `PW_SEED`.
+10. Set up the rwb-train container. Substitute <license> with your RSP license. You should modify the following options:
+
+- `USER_PREFIX`: the left side of the name you want for your users to have, e.g. `rmed`. 
+- `GH_REPO`: The GitHub repository with the training materials (exercises, solutions)
+- `R_PACKAGES`: Additional R packages you would like to install
+- `N_USERS`: The number of user accounts you want to create. Note: the first 10 user accounts (001-010) should be reserved for instructors and TAs - these accounts will have `sudo` privileges inside the container, which can be useful for troubleshooting.
+- `PW_SEED`: The random seed for generating user passwords. You must supply this to generate reproducible passwords. 
 
 ```bash
 sudo docker pull skadauke/rwb-train
@@ -180,7 +186,7 @@ sudo docker run --privileged -it \
     skadauke/rwb-train
 ```
 
-After the Docker container has started up, press Ctrl+A to detach the image. This will allow you to take back control of the console. The container will continue to run in the background.
+After the Docker container has started up, press `Ctrl+A` to detach the image. This will allow you to take back control of the console. The container will continue to run in the background.
 
 11. Copy the usernames and passwords for the training users on the instance - scroll up in your terminal to find them. You will need to hand these out to participants.
 
@@ -229,17 +235,19 @@ sudo nginx -t &&
 sudo systemctl restart nginx
 ```
 
+To verify that everything worked, navigate to http://<your_server>. To the left of the URL, a lock icon should appear to indicate that a secure HTTPS connection is being used. The RStudio Workbench login should show up. Make sure you can log in using the first user (e.g., `rmed001`). 
+
 ### Stopping and scaling
 
-Note: While you are setting up the instance, you may want to stop the VM to save money. If you associated an elastic IP, starting it back up should restore a fully functional environment.
+Note: While you are working on setting up the EC2 instance, you may want to stop it to save money. If you associated an elastic IP, starting it back up should restore a fully functional environment.
 
 1. Once you are satisfied with the configuration of the instance, you can create an image (AMI, Amazon Machine Image). In the EC2 dashboard, right-click on the instance and choose **Create Image**. You may have to stop the instance to make the image available.
-2. On the **AMIs** page in EC2, click the AMI you created and **Launch instance from AMI**. Give it a name, select an appropriate instance size, select the key pair, allow HTTP and HTTPS and make sure there is enough storage as above. Launch the instance
+2. On the **AMIs** page in EC2, click the AMI you created and **Launch instance from AMI**. Give it a name, select an appropriate instance size, select the key pair, allow HTTP and HTTPS and make sure there is enough storage as above. Launch the instance.
 3. Associate your instance with the elasic IP.
 
 ### Refreshing the materials
 
-- To refresh the materials before the workshop, for example to incorporate any last changes to exercises and solutions, first terminate the docker container. Of note, this will erase all training users and everything that's stored inside of their folders. You may then restart the docker container with the appropriate `docker run` command (see above for examples).
+- To refresh the materials before the workshop, for example to incorporate any last minute changes to exercises and solutions, first terminate the docker container. Of note, this will erase all training users and everything that's stored inside of their folders - this is good because it will create a clean slate. You may then restart the docker container with the appropriate `docker run` command (see above for examples).
 
 ```bash
 # The following commands stop and remove *all* docker containers - proceed with caution!
@@ -249,9 +257,10 @@ sudo docker rm $(sudo docker ps -a -q)
 
 ### Teardown
 
-To stop getting charged, you will want to remove the following after you are done:
+To stop getting charged, you will want to make sure remove all of the following after you are done:
 
 - EC2 instance
+- Elastic IPs
 - Hosted zone
 - Custom images
 
