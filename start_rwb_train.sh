@@ -19,7 +19,7 @@ R_PACKAGES_GH=
 
 usage () { 
   echo
-  echo "Usage: ./start_rsp_train.sh --pw-seed <value> --gh-repo <value> [--n-users <value>]"
+  echo "Usage: ./start_rwb_train.sh --pw-seed <value> --gh-repo <value> [--n-users <value>]"
   echo "                            [--user-prefix <value>] [--r-packages <pkg1,pkg2,pkg3,...>]"
   echo "                            [--r-packages-gh <repo1/pkg1,repo2/pkg2,...>]"
   echo
@@ -220,6 +220,6 @@ do
 
 done < $USER_FILE
 
-# Run RSP startup script
+# Run RWB startup script
 
 /usr/local/bin/startup.sh

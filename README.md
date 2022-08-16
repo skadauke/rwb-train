@@ -1,10 +1,10 @@
 # RStudio Server Pro Training Environment
 
-Docker image for an Intro to R training environment using RStudio Workbench (formerly called RStudio Server Pro). This image is based on [rstudio/rstudio-workbench](https://hub.docker.com/r/rstudio/rstudio-workbench). It automatically generates a configurable number (up to 999) of training accounts, which can be useful for Intro to R courses such as [Intro to R for Clinicians](https://github.com/skadauke/intro-to-r-for-clinicians-rmed2020) at the [R/Medicine 2020 Virtual Conference](https://www.r-medicine.com).
+Docker image for an Intro to R training environment using RStudio Workbench (formerly called RStudio Server Pro). This image is based on [rstudio/rstudio-workbench](https://hub.docker.com/r/rstudio/rstudio-workbench). It automatically generates a configurable number (up to 999) of training accounts, which can be useful for Intro to R courses such as [Intro to R for Clinical Data](https://github.com/skadauke/intro-to-r-for-clinical-data-rmed2022) at the [R/Medicine 2022 Virtual Conference](https://r-medicine.org).
 
 ## Features
 
-The `Dockerfile` extends [rstudio/rstudio-server-pro](https://hub.docker.com/r/rstudio/rstudio-server-pro) by adding:
+The `Dockerfile` extends [rstudio/rstudio-workbench](https://hub.docker.com/r/rstudio/rstudio-workbench) by adding:
 
 - The `libxml2-dev`, `vim`, and `git` packages
 - The `tidyverse`, `rmarkdown`, and `devtools` R packages
@@ -13,7 +13,7 @@ In addition, the startup script accomplishes the following:
 
 - Clones a GitHub repository with course materials.
   - Repos must contain two folders labeled `exercises` and `solutions`.
-  - For an example repo, see <https://github.com/skadauke/intro-to-r-for-clinicians-rmed2020>.
+  - For an example repo, see <https://github.com/skadauke/intro-to-r-for-clinical-data-rmed2022>.
 - Creates a configurable number of users with a configurable prefix, e.g. `train001`, `train002`, ... or `rmed001`, `rmed002`, ...
   - Passwords are random 6-digit numbers. The seed for random password generation is passed at the time `docker run` is invoked.
   - Course materials are automatically placed inside the home directory of each user. To save space, only `exercises` and `solutions` folders are copied.
@@ -23,19 +23,19 @@ In addition, the startup script accomplishes the following:
 
 ## Configuration
 
-Note that running the RStudio Server Pro Docker image requires the container to run using the `--privileged` flag and a valid RStudio Server Pro license. The image also expects an `/etc/rstudio` folder which customarily is mounted from a local directory named `server-pro/conf`.
+Note that running the RStudio Workbench Docker image requires the container to run using the `--privileged` flag and a valid RStudio Workbench license. The image also expects an `/etc/rstudio` folder which customarily is mounted from a local directory named `server-pro/conf`.
 
 ## Example use
 
 ### Build the docker image locally
 
 ```bash
-docker build -t rsp-train .
+docker build -t rwb-train .
 ```
 
 ### Start the RStudio Server
 
-The following example will start an RStudio Server Pro instance with `shiny`, `flexdashboard`, and `plotly` packages from CRAN, as well as the GitHub `rstudio/DT` package from GitHub, installed globally. One hundred users will be created, named `train001`, `train002`, ... `train100`. Each user's home directory will have a copy of the `exercises` and `solutions` folders from the `skadauke/intro-to-r-for-clinicians-rmed2020` GitHub repository, as well as a folder titled `backup/` which contains another copy of the `exercises` folder (This comes in handy if the learner accidentally deletes or otherwise changes an exercise file).
+The following example will start an RStudio Workbench instance with `shiny`, `flexdashboard`, and `plotly` packages from CRAN, as well as the `rstudio/DT` package from GitHub, installed globally. One hundred users will be created, named `rmed001`, `rmed002`, ... `rmed100`. Each user's home directory will have a copy of the `exercises` and `solutions` folders from the `skadauke/intro-to-r-for-clinical-data-rmed2022` GitHub repository, as well as a folder titled `backup` which contains another copy of the `exercises` folder (This comes in handy if the learner accidentally deletes or otherwise changes an exercise file).
 
 ```bash
 # Replace with valid license
@@ -43,18 +43,18 @@ export RSP_LICENSE=XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX
 
 docker run --privileged -it \
     -p 8787:8787 \
-    -e USER_PREFIX=train \
+    -e USER_PREFIX=rmed \
     -e N_USERS=100 \
     -e PW_SEED=12345 \
-    -e GH_REPO=https://github.com/skadauke/intro-to-r-for-clinicians-rmed2020 \
+    -e GH_REPO=https://github.com/skadauke/intro-to-r-for-clinical-data-rmed2022 \
     -e R_PACKAGES=shiny,flexdashboard,plotly \
     -e R_PACKAGES_GH=rstudio/DT \
     -e RSP_LICENSE=$RSP_LICENSE \
     -v "$PWD/server-pro/conf/":/etc/rstudio \
-    rsp-train
+    rwb-train
 ```
 
-Open [`http://localhost:8787`](http://localhost:8787) to access RStudio Server Pro.
+Open [`http://localhost:8787`](http://localhost:8787) to access RStudio Workbench.
 
 ### List usernames and passwords
 
@@ -74,13 +74,13 @@ This generates the file `users.txt` which is a tab delimited file listing userna
 
 ## Deploy to Amazon Web Services Elastic Compute Cloud (AWS EC2)
 
-The following instructions explain how to set up an RSP training instance on AWS for teaching.
+The following instructions explain how to set up an RWB training instance on AWS for teaching.
 
-1. Push the image to Docker Hub (optional, if you have modified the `Dockerfile`. Substitute your Docker Hub username for `<your_username>`):
+1. Push the image to Docker Hub (optional, only needed if you have modified the `Dockerfile`. Substitute your Docker Hub username for `<your_username>`):
 
 ```bash
-docker build <your_username>/rsp-train .
-docker push <your_username>/rsp-train 
+docker build <your_username>/rwb-train
+docker push <your_username>/rwb-train
 ```
 
 2. Create an EC2 instance with the following properties:
@@ -93,15 +93,15 @@ docker push <your_username>/rsp-train
 
 3. Note the **Public IPv4 address** of the machine.
 
-4. Optional: create a domain name for your server. One way to do this is using AWS' Route 53 service.
+4. Optional but highly recommended: Create an Elastic IP for your machine. This will allow you to avoid the hassle of changing your IP address in DNS records every time you shut down and restart your server. From within EC2, allocate an "Elastic IP" address and associate it with your instance.
 
-    Note: register your domain early. It may take up to 3 days for the domain registration to be processed (although in my case it took about half an hour).
+5. Optional: create a domain name for your server. One way to do this is using AWS' Route 53 service.
 
-5. Create a hosted zone in Route 53 for your domain name. (If you just registered the domain name, Route 53 will have created a hosted zone for you). Within the hosted zone, create a new DNS record (record type **A**) that points the host name to the IP of your server. For more information, see [here](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-ec2-instance.html)
+    Note: register your domain early. It may take up to 3 days for the domain registration to be processed (although in my case it took about half an hour), and it may take up to 72 hours for the DNS record to propagate through the internet.
 
-If you want to avoid the hassle of changing your IP address in DNS records every time you shut down and restart your server, you can choose to allocate an "Elastic IP" address (a small number come free with every AWS account).  Read [the AWS documentation](https://aws.amazon.com/premiumsupport/knowledge-center/ec2-associate-static-public-ip/) about Elastic IP and consider allocating one for your EC2 instance.
+6. Create a hosted zone in Route 53 for your domain name. (If you just registered the domain name, Route 53 will have created a hosted zone for you). Within the hosted zone, create a new DNS record (record type **A**) that points the host name to the IP of your server. For more information, see [here](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-ec2-instance.html).
 
-6. Log into the machine, substituting `<path-to-your-pem-file>` for the path to the `.pem` key file, and `<your_server>` for either the public IPv4 address or the domain name of the server.
+7. Log into the machine, substituting `<path-to-your-pem-file>` for the path to the `.pem` key file, and `<your_server>` for either the public IPv4 address or the domain name of the server.
 
 ```bash
 ssh -i <path-to-your-pem-file> ubuntu@<your_server>
@@ -162,7 +162,7 @@ sudo apt install docker-ce docker-ce-cli containerd.io
 10. Set up the RSP-train application. Substitute <license> with your RSP license. Also, for security reasons, it's highly recommended that you change the `PW_SEED`.
 
 ```bash
-sudo docker pull skadauke/rsp-train
+sudo docker pull skadauke/rwb-train
 
 export RSP_LICENSE=<license>
 
@@ -170,19 +170,21 @@ sudo docker run --privileged -it \
     --detach-keys "ctrl-a" \
     --restart unless-stopped \
     -p 8787:8787 -p 5559:5559 \
-    -e USER_PREFIX=apir \
-    -e GH_REPO=https://github.com/amromeo/api_r2021 \
-    -e R_PACKAGES=shiny,flexdashboard,plotly,DT \
+    -e USER_PREFIX=rmed \
+    -e GH_REPO=https://github.com/skadauke/intro-to-r-for-clinical-data-rmed2022 \
+    -e R_PACKAGES=shiny,flexdashboard,plotly,DT,markdown \
     -e N_USERS=100 \
     -e PW_SEED=12345 \
     -e RSP_LICENSE=$RSP_LICENSE \
     -v "$PWD/server-pro/conf/":/etc/rstudio \
-    skadauke/rsp-train
+    skadauke/rwb-train
 ```
 
 After the Docker container has started up, press Ctrl+A to detach the image. This will allow you to take back control of the console. The container will continue to run in the background.
 
-11. Configure Nginx to forward traffic to the Docker container
+11. Copy the usernames and passwords for the training users on the instance - scroll up in your terminal to find them. You will need to hand these out to participants.
+
+12. Configure Nginx to forward traffic to the Docker container
 
 Below, substitute `<my_hostname>` with the domain name of your host.
 
@@ -227,9 +229,23 @@ sudo nginx -t &&
 sudo systemctl restart nginx
 ```
 
-### Troubleshooting
+### Stopping and scaling
 
-Manually deactivating the license: http://apps.rstudio.com/deactivate-license/
+Note: While you are setting up the instance, you may want to stop the VM to save money. If you associated an elastic IP, starting it back up should restore a fully functional environment.
+
+1. Once you are satisfied with the configuration of the instance, you can create an image (AMI, Amazon Machine Image). In the EC2 dashboard, right-click on the instance and choose **Create Image**. You may have to stop the instance to make the image available.
+2. On the **AMIs** page in EC2, click the AMI you created and **Launch instance from AMI**. Give it a name, select an appropriate instance size, select the key pair, allow HTTP and HTTPS and make sure there is enough storage as above. Launch the instance
+3. Associate your instance with the elasic IP.
+
+### Refreshing the materials
+
+- To refresh the materials before the workshop, for example to incorporate any last changes to exercises and solutions, first terminate the docker container. Of note, this will erase all training users and everything that's stored inside of their folders. You may then restart the docker container with the appropriate `docker run` command (see above for examples).
+
+```bash
+# The following commands stop and remove *all* docker containers - proceed with caution!
+sudo docker kill $(sudo docker ps -q) &&
+sudo docker rm $(sudo docker ps -a -q)
+```
 
 ### Teardown
 
@@ -237,6 +253,11 @@ To stop getting charged, you will want to remove the following after you are don
 
 - EC2 instance
 - Hosted zone
+- Custom images
+
+### Troubleshooting
+
+Manually deactivating the license: http://apps.rstudio.com/deactivate-license/
 
 ### Expected cost
 
