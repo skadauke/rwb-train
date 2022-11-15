@@ -101,7 +101,11 @@ docker push <your_username>/rwb-train
 
 6. Create a hosted zone in Route 53 for your domain name. (If you just registered the domain name, Route 53 will have created a hosted zone for you). Within the hosted zone, create a new DNS record (record type **A**) that points the host name to the IP of your server. Be sure to use the **Elastic IP** for the IP. For more information, see [here](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-ec2-instance.html).
 
-7. Log into the machine, substituting `<path-to-your-pem-file>` for the path to the `.pem` key file, and `<your_server>` for either the elastic IP address or the domain name of the server.
+7. **Important**: if you created a hosted zone for a domain that you had previously registered, you must change the name servers on the domain registration to match the authoritative domain servers in the **NS** record of the hosted zone. In Route 53, go to **registered domains** -> click on your domain -> click **Add or edit name servers**.
+
+8. In the hosted zone, change the TTL of the NS record to 60 seconds. Note: *it may take a long time for the DNS to work*. To make sure there aren't any issues, see [this page](https://aws.amazon.com/premiumsupport/knowledge-center/partial-dns-failures/) for troubleshooting advice.
+
+8. Log into the machine, substituting `<path-to-your-pem-file>` for the path to the `.pem` key file, and `<your_server>` for either the elastic IP address or the domain name of the server.
 
 ```bash
 ssh -i <path-to-your-pem-file> ubuntu@<your_server>
@@ -109,7 +113,9 @@ ssh -i <path-to-your-pem-file> ubuntu@<your_server>
 
 Enter "yes" if asked if you want to connect. If you get a warning about an unprotected private key file, change permissions to user read-only by running `chmod 0400 <path-to-your-pem-file>`.
 
-7. Update packages and set up a firewall
+Note: as an easier alternative to SSH, you may use **EC2 Connect**. From the EC2 dashboard, click **Connect**.
+
+1. Update packages and set up a firewall
 
 ```bash
 sudo apt update &&
@@ -257,9 +263,12 @@ To verify that everything worked, navigate to `http://<your_server>`. To the lef
 
 Note: While you are working on setting up the EC2 instance, you may want to stop it to save money. If you associated an elastic IP, starting it back up should restore a fully functional environment.
 
-1. Once you are satisfied with the configuration of the instance, you can create an image (AMI, Amazon Machine Image). In the EC2 dashboard, right-click on the instance and choose **Create Image**. You may have to stop the instance to make the image available.
-2. Once you are ready to start a scaled-up version of your instance for teaching, go to the **AMIs** page in EC2. Click the AMI you created and then **Launch instance from AMI**. Give it a name, select an appropriate instance size, select the key pair, allow HTTP and HTTPS and make sure there is enough storage as above. Launch the instance.
-3. Associate your instance with the elastic IP.
+1. Once you are satisfied with the configuration of the instance, you can create an image (AMI, Amazon Machine Image). Go to the EC2 dashboard and stop the EC2 instance (do **not** terminate it!)
+2. Right-click on the stopped instance and choose **Create Image**. It may take 10 minutes to create an AMI from a 16GB EC2 instance.
+3. Go to the **AMIs** page in EC2 and wait until the AMI is **available**.
+4. You can now go back to the EC2 dashboard and terminate the EC2 instance.
+5. Once you are ready to start a scaled-up version of your instance for teaching, go to the **AMIs** page in EC2. Click the AMI you created and then **Launch instance from AMI**. Give it a name, select an appropriate instance size (see above!), select the key pair, allow HTTP and HTTPS and make sure there is enough storage (16 GB + 1 GB per user). Launch the instance.
+6. Associate your instance with the elastic IP.
 
 ### Refreshing the materials
 
