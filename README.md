@@ -105,7 +105,7 @@ docker push <your_username>/rwb-train
 
 8. In the hosted zone, change the TTL of the NS record to 60 seconds. Note: *it may take a long time for the DNS to work*. To make sure there aren't any issues, see [this page](https://aws.amazon.com/premiumsupport/knowledge-center/partial-dns-failures/) for troubleshooting advice.
 
-8. Log into the machine, substituting `<path-to-your-pem-file>` for the path to the `.pem` key file, and `<your_server>` for either the elastic IP address or the domain name of the server.
+9. Log into the machine, substituting `<path-to-your-pem-file>` for the path to the `.pem` key file, and `<your_server>` for either the elastic IP address or the domain name of the server.
 
 ```bash
 ssh -i <path-to-your-pem-file> ubuntu@<your_server>
@@ -115,7 +115,7 @@ Enter "yes" if asked if you want to connect. If you get a warning about an unpro
 
 Note: as an easier alternative to SSH, you may use **EC2 Connect**. From the EC2 dashboard, click **Connect**.
 
-1. Update packages and set up a firewall
+10. Update packages and set up a firewall
 
 ```bash
 sudo apt update &&
@@ -125,7 +125,7 @@ sudo ufw allow OpenSSH &&
 sudo ufw enable
 ```
 
-8. Install and enable Nginx
+11. Install and enable Nginx
 
 ```bash
 sudo apt install nginx &&
@@ -134,11 +134,11 @@ sudo systemctl start nginx &&
 sudo systemctl enable nginx
 ```
 
-9. Use your browser to check that your server is accessible from `http://<your_server>`.
+12. Use your browser to check that your server is accessible from `http://<your_server>`.
 
 The nginx splash page should show.
 
-10. Configure Nginx as a reverse proxy with HTTPS redirection, using a TLS/SSL certificate from Letsencrypt/certbot.
+13. Configure Nginx as a reverse proxy with HTTPS redirection, using a TLS/SSL certificate from Letsencrypt/certbot.
 
 Substitute `<your_domain>` with the domain name you registered:
 
@@ -151,11 +151,11 @@ sudo certbot --nginx -d <your_domain>
 
 Enter your email when prompted.
 
-11. Check that HTTPS redirection works
+14. Check that HTTPS redirection works
 
 Use your browser to connects to `http://<your_server>`. Note that you got redirected to a secure HTTPS page. A lock should appear in your browser to the right of the URL to confirm that the TLS/SSL certificate is valid.
 
-12. Set up Docker
+15. Set up Docker
 
 ```bash
 sudo apt update &&
@@ -171,7 +171,7 @@ sudo apt update &&
 sudo apt install docker-ce docker-ce-cli containerd.io
 ```
 
-13. Set up the `rwb-train` container. 
+16. Set up the `rwb-train` container. 
 
 Substitute `<license>` with your RSP license. 
 
@@ -202,15 +202,15 @@ sudo docker run --privileged -it \
     skadauke/rwb-train
 ```
 
-14. After the Docker container has started up, press `Ctrl+A` to detach the image. 
+17. After the Docker container has started up, press `Ctrl+A` to detach the image. 
 
 This will allow you to take back control of the console. The container will continue to run in the background.
 
-15. Copy the usernames and passwords for the training users on the instance.
+18. Copy the usernames and passwords for the training users on the instance.
 
 Scroll up in your terminal to find them. You will need to hand these out to participants.
 
-16. Configure Nginx to forward traffic to the Docker container
+19. Configure Nginx to forward traffic to the Docker container
 
 Below, substitute `<my_hostname>` with the domain name of your host.
 
@@ -248,14 +248,14 @@ Add the following lines right after `http {` in `/etc/nginx/nginx.conf`:
         server_names_hash_bucket_size 64;
 ```
 
-17. Test the configuration and restart Nginx.
+20. Test the configuration and restart Nginx.
 
 ```bash
 sudo nginx -t &&
 sudo systemctl restart nginx
 ```
 
-18. Test that you can login to RStudio Workbench.
+21. Test that you can login to RStudio Workbench.
 
 To verify that everything worked, navigate to `http://<your_server>`. To the left of the URL, a lock icon should appear to indicate that a secure HTTPS connection is being used. The RStudio Workbench login should show up. Make sure you can log in using the first user (e.g., `rmed001`). 
 
